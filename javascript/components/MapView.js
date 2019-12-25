@@ -519,6 +519,10 @@ class MapView extends NativeBridgeComponent(React.Component) {
     return this._runNativeCommand('showAttribution', this._nativeRef);
   }
 
+  addImage(tag, url) {
+    return this._runNativeCommand('addImage', this._nativeRef, [tag, url]);
+  }
+
   _createStopConfig(config = {}) {
     const stopConfig = {
       mode: isNumber(config.mode) ? config.mode : MapboxGL.CameraModes.Ease,

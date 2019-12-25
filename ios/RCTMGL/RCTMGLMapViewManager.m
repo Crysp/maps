@@ -324,6 +324,31 @@ RCT_EXPORT_METHOD(setSourceVisibility:(nonnull NSNumber *)reactTag
     }];
 }
 
+RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
+                  tag:(NSString *)tag
+                  url:(NSString *)url
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+
+        if (![view isKindOfClass:[RCTMGLMapView class]]) {
+            RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
+            return;
+        }
+
+        RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
+
+        [RCTMGLUtils fetchImage:self.bridge url:url scale:1.0 callback:^(NSError *error, UIImage *image) {
+            if (image != nil) {
+                [reactMapView.style setImage:image forName:url];
+            }
+            resolve(nil);
+        }];
+    }];
+}
+
 #pragma mark - UIGestureRecognizers
 
 - (void)didTapMap:(UITapGestureRecognizer *)recognizer

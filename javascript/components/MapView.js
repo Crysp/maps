@@ -519,8 +519,8 @@ class MapView extends NativeBridgeComponent(React.Component) {
     return this._runNativeCommand('showAttribution', this._nativeRef);
   }
 
-  addImage(tag, url) {
-    return this._runNativeCommand('addImage', this._nativeRef, [tag, url]);
+  addImage(url) {
+    return this._runNativeCommand('addImage', this._nativeRef, [url]);
   }
 
   _createStopConfig(config = {}) {

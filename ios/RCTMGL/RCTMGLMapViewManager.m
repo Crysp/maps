@@ -44,25 +44,25 @@ RCT_EXPORT_MODULE(RCTMGLMapView)
     // setup map gesture recongizers
     UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:nil];
     doubleTap.numberOfTapsRequired = 2;
-    
+
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapMap:)];
     [tap requireGestureRecognizerToFail:doubleTap];
-    
+
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(didLongPressMap:)];
-    
+
     // this allows the internal annotation gestures to take precedents over the map tap gesture
     for (int i = 0; i < mapView.gestureRecognizers.count; i++) {
         UIGestureRecognizer *gestuerReconginer = mapView.gestureRecognizers[i];
-        
+
         if ([gestuerReconginer isKindOfClass:[UITapGestureRecognizer class]]) {
             [tap requireGestureRecognizerToFail:gestuerReconginer];
         }
     }
-    
+
     [mapView addGestureRecognizer:doubleTap];
     [mapView addGestureRecognizer:tap];
     [mapView addGestureRecognizer:longPress];
-    
+
     return mapView;
 }
 
@@ -99,12 +99,12 @@ RCT_EXPORT_METHOD(getPointInView:(nonnull NSNumber*)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
 
         CGPoint pointInView = [reactMapView convertCoordinate:CLLocationCoordinate2DMake([coordinate[1] doubleValue], [coordinate[0] doubleValue])
@@ -121,17 +121,17 @@ RCT_EXPORT_METHOD(getCoordinateFromView:(nonnull NSNumber*)reactTag
 {
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
     id view = viewRegistry[reactTag];
-    
+
     if (![view isKindOfClass:[RCTMGLMapView class]]) {
       RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
       return;
     }
-    
+
     RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
-    
+
     CLLocationCoordinate2D coordinate = [reactMapView convertPoint:point
                                             toCoordinateFromView:reactMapView];
-    
+
     resolve(@{ @"coordinateFromView": @[@(coordinate.longitude), @(coordinate.latitude)] });
   }];
 }
@@ -144,12 +144,12 @@ RCT_EXPORT_METHOD(takeSnap:(nonnull NSNumber*)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
         NSString *uri = [reactMapView takeSnap:writeToDisk];
         resolve(@{ @"uri": uri });
@@ -162,12 +162,12 @@ RCT_EXPORT_METHOD(getVisibleBounds:(nonnull NSNumber*)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
         resolve(@{ @"visibleBounds": [RCTMGLUtils fromCoordinateBounds:reactMapView.visibleCoordinateBounds] });
     }];
@@ -216,23 +216,23 @@ RCT_EXPORT_METHOD(queryRenderedFeaturesAtPoint:(nonnull NSNumber*)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         NSSet *layerIDSet = nil;
         if (layerIDs != nil && layerIDs.count > 0) {
             layerIDSet = [NSSet setWithArray:layerIDs];
         }
-        
+
         RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
         NSPredicate* predicate = [FilterParser parse:filter];
         NSArray<id<MGLFeature>> *shapes = [reactMapView visibleFeaturesAtPoint:CGPointMake([point[0] floatValue], [point[1] floatValue])
                                                         inStyleLayersWithIdentifiers:layerIDSet
                                                         predicate:predicate];
-        
+
         NSMutableArray<NSDictionary*> *features = [[NSMutableArray alloc] init];
         for (int i = 0; i < shapes.count; i++) {
             [features addObject:shapes[i].geoJSONDictionary];
@@ -253,34 +253,34 @@ RCT_EXPORT_METHOD(queryRenderedFeaturesInRect:(nonnull NSNumber*)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
-        
+
         // bbox[top, right, bottom, left]
         CGFloat width = [bbox[1] floatValue] - [bbox[3] floatValue];
         CGFloat height = [bbox[0] floatValue] - [bbox[2] floatValue];
         CGRect rect = CGRectMake([bbox[3] floatValue], [bbox[2] floatValue], width, height);
-        
+
         NSSet *layerIDSet = nil;
         if (layerIDs != nil && layerIDs.count > 0) {
             layerIDSet = [NSSet setWithArray:layerIDs];
         }
-        
+
         NSPredicate* predicate = [FilterParser parse:filter];
         NSArray<id<MGLFeature>> *shapes = [reactMapView visibleFeaturesInRect:rect
                                                         inStyleLayersWithIdentifiers:layerIDSet
                                                         predicate:predicate];
-        
+
         NSMutableArray<NSDictionary*> *features = [[NSMutableArray alloc] init];
         for (int i = 0; i < shapes.count; i++) {
             [features addObject:shapes[i].geoJSONDictionary];
         }
-        
+
         resolve(@{ @"data": @{ @"type": @"FeatureCollection", @"features": features }});
     }];
 }
@@ -291,12 +291,12 @@ RCT_EXPORT_METHOD(showAttribution:(nonnull NSNumber *)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         __weak RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
         [reactMapView showAttribution:reactMapView];
         resolve(nil);
@@ -312,12 +312,12 @@ RCT_EXPORT_METHOD(setSourceVisibility:(nonnull NSNumber *)reactTag
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
         id view = viewRegistry[reactTag];
-        
+
         if (![view isKindOfClass:[RCTMGLMapView class]]) {
             RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
             return;
         }
-        
+
         __weak RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
         [reactMapView setSourceVisibility:visible sourceId:sourceId sourceLayerId:sourceLayerId];
         resolve(nil);
@@ -325,7 +325,6 @@ RCT_EXPORT_METHOD(setSourceVisibility:(nonnull NSNumber *)reactTag
 }
 
 RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
-                  tag:(NSString *)tag
                   url:(NSString *)url
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -353,36 +352,36 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
 
 - (void)didTapMap:(UITapGestureRecognizer *)recognizer
 {
-    RCTMGLMapView *mapView = (RCTMGLMapView*)recognizer.view;    
+    RCTMGLMapView *mapView = (RCTMGLMapView*)recognizer.view;
     CGPoint screenPoint = [recognizer locationInView:mapView];
     NSArray<RCTMGLSource *> *touchableSources = [mapView getAllTouchableSources];
-    
+
     NSMutableDictionary<NSString *, id<MGLFeature>> *hits = [[NSMutableDictionary alloc] init];
     NSMutableArray<RCTMGLSource *> *hitTouchableSources = [[NSMutableArray alloc] init];
     for (RCTMGLSource *touchableSource in touchableSources) {
         NSDictionary<NSString *, NSNumber *> *hitbox = touchableSource.hitbox;
         float halfWidth = [hitbox[@"width"] floatValue] / 2.f;
         float halfHeight = [hitbox[@"height"] floatValue] / 2.f;
-        
+
         CGFloat top = screenPoint.y - halfHeight;
         CGFloat left = screenPoint.x - halfWidth;
         CGRect hitboxRect = CGRectMake(left, top, [hitbox[@"width"] floatValue], [hitbox[@"height"] floatValue]);
-        
+
         NSArray<id<MGLFeature>> *features = [mapView visibleFeaturesInRect:hitboxRect
                                                      inStyleLayersWithIdentifiers:[NSSet setWithArray:[touchableSource getLayerIDs]]
                                                      predicate:nil];
-        
+
         if (features.count > 0) {
             hits[touchableSource.id] = features[0];
             [hitTouchableSources addObject:touchableSource];
         }
     }
-    
+
     if (hits.count > 0) {
         RCTMGLSource *source = [mapView getTouchableSourceWithHighestZIndex:hitTouchableSources];
         if (source != nil && source.hasPressListener) {
             NSDictionary<NSString *, id> *geoJSONDict = hits[source.id].geoJSONDictionary;
-            
+
             NSString *eventType = RCT_MAPBOX_VECTOR_SOURCE_LAYER_PRESS;
             if ([source isKindOfClass:[RCTMGLShapeSource class]]) {
                 eventType = RCT_MAPBOX_SHAPE_SOURCE_LAYER_PRESS;
@@ -393,11 +392,11 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
             return;
         }
     }
-    
+
     if (mapView.onPress == nil) {
         return;
     }
-    
+
     RCTMGLMapTouchEvent *event = [RCTMGLMapTouchEvent makeTapEvent:mapView withPoint:screenPoint];
     [self fireEvent:event withCallback:mapView.onPress];
 }
@@ -405,11 +404,11 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
 - (void)didLongPressMap:(UILongPressGestureRecognizer *)recognizer
 {
     RCTMGLMapView *mapView = (RCTMGLMapView*)recognizer.view;
-    
+
     if (mapView == nil || mapView.onPress == nil || recognizer.state != UIGestureRecognizerStateBegan) {
         return;
     }
-    
+
     RCTMGLMapTouchEvent *event = [RCTMGLMapTouchEvent makeLongPressEvent:mapView withPoint:[recognizer locationInView:mapView]];
     [self fireEvent:event withCallback:mapView.onLongPress];
 }
@@ -438,7 +437,7 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
 {
     if ([annotation isKindOfClass:[RCTMGLPointAnnotation class]]) {
         RCTMGLPointAnnotation *rctAnnotation = (RCTMGLPointAnnotation *)annotation;
-        
+
         if (rctAnnotation.onSelected != nil) {
             RCTMGLMapTouchEvent *event = [RCTMGLMapTouchEvent makeAnnotationTapEvent:rctAnnotation];
             rctAnnotation.onSelected([event toJSON]);
@@ -450,7 +449,7 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
 {
     if ([annotation isKindOfClass:[RCTMGLPointAnnotation class]]) {
         RCTMGLPointAnnotation *rctAnnotation = (RCTMGLPointAnnotation *)annotation;
-        
+
         if (rctAnnotation.onDeselected != nil) {
             rctAnnotation.onDeselected(nil);
         }
@@ -474,7 +473,7 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
     return nil;
 }
 
-- (BOOL)mapView:(MGLMapView *)mapView shouldChangeFromCamera:(MGLMapCamera *)oldCamera toCamera:(MGLMapCamera *)newCamera 
+- (BOOL)mapView:(MGLMapView *)mapView shouldChangeFromCamera:(MGLMapCamera *)oldCamera toCamera:(MGLMapCamera *)newCamera
 {
     RCTMGLMapView* reactMapView = ((RCTMGLMapView *) mapView);
     return MGLCoordinateBoundsIsEmpty(reactMapView.maxBounds) || MGLCoordinateInCoordinateBounds(newCamera.centerCoordinate, reactMapView.maxBounds);
@@ -494,11 +493,11 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
 }
 
 - (void)mapView:(MGLMapView *)mapView regionDidChangeWithReason:(MGLCameraChangeReason)reason animated:(BOOL)animated
-{    
+{
     if ((reason & MGLCameraChangeReasonTransitionCancelled) == MGLCameraChangeReasonTransitionCancelled) return;
 
     ((RCTMGLMapView *) mapView).isUserInteraction = (BOOL)(reason & ~MGLCameraChangeReasonProgrammatic);
-    
+
     NSDictionary *payload = [self _makeRegionPayload:mapView animated:animated];
     [self reactMapDidChange:mapView eventType:RCT_MAPBOX_REGION_DID_CHANGE andPayload:payload];
 }
@@ -551,7 +550,7 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
 {
     RCTMGLMapView *reactMapView = (RCTMGLMapView*)mapView;
     //style.localizesLabels = reactMapView.reactLocalizeLabels;
-    
+
     for (int i = 0; i < reactMapView.sources.count; i++) {
         RCTMGLSource *source = reactMapView.sources[i];
         source.map = reactMapView;
@@ -560,11 +559,11 @@ RCT_EXPORT_METHOD(addImage:(nonnull NSNumber *)reactTag
         RCTMGLLayer *layer = reactMapView.layers[i];
         layer.map = reactMapView;
     }
-    
+
     if (reactMapView.light != nil) {
         reactMapView.light.map = reactMapView;
     }
-    
+
     [reactMapView notifyStyleLoaded];
     [self reactMapDidChange:reactMapView eventType:RCT_MAPBOX_DID_FINISH_LOADING_STYLE];
 }
